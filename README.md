@@ -1,60 +1,66 @@
 # Antes da Chuva
 
-Protótipo acadêmico mobile de registro preventivo de riscos relacionados à chuva. Desenvolvido com Expo SDK 58, React Native, TypeScript, Expo Router e AsyncStorage.
+**FIAP · Global Solution 2026/2 · Mobile Application Development**
 
-## Executar
-
-Na pasta do projeto, execute `npm install` se necessário e `npm start`. Use `npm run web` para navegador ou abra o QR code no Expo Go compatível com SDK 58.
-
-## Conta demonstrativa
-
-- E-mail: `aluno@antesdachuva.com`
-- Senha: `Chuva123!`
-
-O login é simulado e a sessão fica somente em memória. Não há autenticação de servidor. Nenhuma senha é armazenada no AsyncStorage.
+Antes da Chuva é um aplicativo de zeladoria preventiva para registrar situações que aumentam o risco de alagamento, como bueiros obstruídos, entulho nas vias e problemas em córregos. O morador informa o que encontrou e onde aconteceu. O gestor usa a fila de chamados para priorizar o atendimento e registrar o andamento, que fica disponível no detalhe da ocorrência.
 
 ## Funcionalidades
 
-- Login com validação e saída da conta; rotas internas protegidas pela sessão.
-- Lista de ocorrências com busca por título, local e categoria.
-- Cadastro com título, endereço, categoria, prioridade e descrição; validação de campos e indicação de salvamento.
-- Consulta dos detalhes com data e hora do registro.
-- Persistência local na chave `@antes-da-chuva/incidents:v1` com um exemplo demonstrativo no primeiro uso.
-- Estados de carregamento, busca vazia, falha de leitura/gravação e registro inexistente.
+- O **morador** pode entrar na conta de teste, buscar, cadastrar, consultar, editar e excluir ocorrências. O detalhe mostra o status, a prioridade e o histórico de atendimento.
+- O **gestor** pode consultar a fila, filtrar chamados pendentes ou resolvidos, definir prioridade e atualizar o status. Cada atualização fica registrada no histórico e pode incluir uma observação ao morador.
+- O **AsyncStorage** guarda a sessão, as ocorrências e o histórico localmente. Na versão web, use o mesmo navegador, perfil e endereço para consultar os registros após recarregar a página.
 
-Dados persistem após recarregar ou fechar o app. No navegador, são específicos da origem e do perfil utilizado. Limpar os dados do aplicativo/navegador remove os registros. Não há sincronização, envio a órgãos públicos, fotos ou geolocalização nesta etapa.
+## Tecnologias
 
-## Organização
+| Tecnologia | Uso no projeto |
+| --- | --- |
+| React Native com Expo SDK 58 | Interface e execução do aplicativo |
+| React Native Web | Execução no navegador |
+| TypeScript | Tipagem dos dados e componentes |
+| Expo Router | Navegação e rotas por perfil |
+| AsyncStorage | Armazenamento local da sessão, dos registros e do histórico |
 
-```text
-src/app/                  # Login e navegação raiz
-src/app/(app)/            # Lista, cadastro e detalhe protegidos
-src/components/incident-ui.tsx # Componentes e estilos compartilhados
-src/context/AppContext.tsx # Sessão e estado das ocorrências
-src/services/storage.ts   # Leitura, validação e gravação local
-src/types/incident.ts     # Tipos e opções dos formulários
-```
+## Como executar
 
-## Verificação manual
-
-1. Tente entrar com credenciais inválidas e depois use a conta demonstrativa.
-2. Consulte o registro de exemplo e volte à lista.
-3. Tente salvar o formulário vazio; preencha todos os campos e salve.
-4. Busque o novo registro por título, local ou categoria e consulte seus detalhes.
-5. Recarregue o aplicativo, faça login e confirme que o cadastro permanece.
-6. Saia da conta e confirme que o botão voltar não permite acessar as telas internas.
-7. Repita no navegador e em um dispositivo Android/iOS disponível.
-
-## Validação e commits
-
-Execute `npx tsc --noEmit`, `npm run lint` e `npx expo-doctor`. Evite `npm audit fix --force`, que pode alterar o SDK.
-
-Revise `git status` e `git diff` antes de versionar. Sugestão de commit após validar:
+Use Node.js 24.7, npm e Git. No terminal, execute os comandos abaixo.
 
 ```bash
-git add src app.json README.md .gitignore package.json package-lock.json eslint.config.js
-git commit -m "feat: implementa estrutura inicial do Antes da Chuva"
-git push origin main
+git clone https://github.com/Canadas7/Antes-da-chuva-mobile-application.git
+cd Antes-da-chuva-mobile-application
+npm ci
+npx expo start
 ```
 
+Quando o Expo iniciar, pressione **`w`** no terminal para abrir o app no navegador.
 
+## Contas de teste
+
+| Perfil | E-mail | Senha |
+| --- | --- | --- |
+| Morador | `teste@antesdachuva.com` | `123456` |
+| Gestor | `gestor@antesdachuva.com` | `123456` |
+
+## Demonstração do aplicativo
+
+1. Entre com a conta de **morador** e consulte a lista de ocorrências.
+2. Clique em **Registrar uma ocorrência**. Preencha título, categoria, endereço, bairro e descrição. Clique em **Salvar ocorrência**.
+3. Abra o novo registro na lista e confira os detalhes. Recarregue a página para verificar que o registro continua disponível.
+4. Para demonstrar o atendimento, saia da conta de morador, entre como **gestor** no mesmo navegador e abra o chamado na fila. Ajuste o status ou a prioridade e clique em **Salvar atendimento**. O andamento aparece no histórico.
+
+## Organização do código
+
+| Caminho | Responsabilidade |
+| --- | --- |
+| `src/app/` | Telas e rotas do morador e do gestor |
+| `src/components/` | Formulários, interface compartilhada e histórico |
+| `src/context/AppContext.tsx` | Sessão e estado das ocorrências |
+| `src/services/storage.ts` | Leitura, validação e gravação dos dados locais |
+| `src/types/incident.ts` | Tipos de ocorrência, status, prioridades e perfis |
+
+## Verificações
+
+```bash
+npx tsc --noEmit
+npm run lint
+node scripts/test-manager-storage.cjs
+```
