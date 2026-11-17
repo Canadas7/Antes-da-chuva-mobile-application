@@ -15,8 +15,8 @@ function normalize(value: unknown): Incident {
   if (![item.id, item.title, item.description, address, neighborhood, item.createdAt].every(v => typeof v === 'string' && v.trim())
     || !categories.includes(item.category as Incident['category']) || !statuses.includes(status as IncidentStatus) || Number.isNaN(Date.parse(item.createdAt as string))) throw new Error('Registro inválido.');
   const updates = item.updates ?? [];
-  if (!Array.isArray(updates) || !updates.every((entry: IncidentUpdate) => entry && typeof entry.id === 'string' && typeof entry.note === 'string' && typeof entry.createdAt === 'string' && !Number.isNaN(Date.parse(entry.createdAt)) && statuses.includes(entry.status) && priorities.includes(entry.priority))) throw new Error('Histórico inválido.');
-  if (item.priority !== undefined && !priorities.includes(item.priority as ManagementInput['priority'])) throw new Error('Prioridade inválida.');
+  if (!Array.isArray(updates) || !updates.every((entry: IncidentUpdate) => entry && typeof entry.id === 'string' && typeof entry.note === 'string' && typeof entry.createdAt === 'string' && !Number.isNaN(Date.parse(entry.createdAt)) && statuses.includes(entry.status) && (entry.priority === undefined || priorities.includes(entry.priority)))) throw new Error('Histórico inválido.');
+  if (item.priority !== undefined && !priorities.includes(item.priority as NonNullable<ManagementInput['priority']>)) throw new Error('Prioridade inválida.');
   return { priority: item.priority as ManagementInput['priority'] | undefined, updates, id: item.id as string, title: item.title as string, description: (item.description as string).replace(/^Exemplo demonstrativo: /, ''), category: item.category as Incident['category'], address: address as string, neighborhood: neighborhood as string, status: status as IncidentStatus, createdAt: item.createdAt as string };
 }
 export async function initializeIncidents(): Promise<Incident[]> {
@@ -61,12 +61,26 @@ export async function updateIncidentStatus(id: string, status: IncidentStatus): 
 }
 export async function manageIncident(id: string, input: ManagementInput): Promise<Incident> {
   if ((await getSession())?.role !== 'GESTOR') throw new Error('Acesso restrito ao gestor.');
-  if (!statuses.includes(input.status) || !priorities.includes(input.priority) || input.note.trim().length < 5 || input.note.trim().length > 1000) throw new Error('Informe status, prioridade e uma descrição do andamento (5 a 1000 caracteres).');
+  const { status, priority } = input;
+  const note = input.note?.trim() ?? '';
+  if (!statuses.includes(status) || (priority !== undefined && !priorities.includes(priority))) {
+    throw new Error('Selecione um status e uma prioridade válidos.');
+  }
   const items = await getIncidents();
   const index = items.findIndex(item => item.id === id);
   if (index === -1) throw new Error('Ocorrência não encontrada.');
-  const update: IncidentUpdate = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`, status: input.status, priority: input.priority, note: input.note.trim(), createdAt: new Date().toISOString() };
-  const updated: Incident = { ...items[index], status: input.status, priority: input.priority, updates: [update, ...(items[index].updates ?? [])] };
+  const current = items[index];
+  if (status === current.status && priority === current.priority && !note) {
+    return current;
+  }
+  const update: IncidentUpdate = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    status,
+    priority,
+    note,
+    createdAt: new Date().toISOString(),
+  };
+  const updated: Incident = { ...current, status, priority, updates: [update, ...(current.updates ?? [])] };
   items[index] = updated;
   await AsyncStorage.setItem(KEY, JSON.stringify(items));
   return updated;
