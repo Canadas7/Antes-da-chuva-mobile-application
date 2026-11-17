@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Antes-da-Chuva-Mobile",
+    "name": "Antes da Chuva",
     "slug": "Antes-da-Chuva-Mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "antesdachuvamobile",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },

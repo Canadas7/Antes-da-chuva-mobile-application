@@ -1,56 +1,60 @@
-# Welcome to your Expo app 👋
+# Antes da Chuva
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Protótipo acadêmico mobile de registro preventivo de riscos relacionados à chuva. Desenvolvido com Expo SDK 58, React Native, TypeScript, Expo Router e AsyncStorage.
 
-## Get started
+## Executar
 
-1. Install dependencies
+Na pasta do projeto, execute `npm install` se necessário e `npm start`. Use `npm run web` para navegador ou abra o QR code no Expo Go compatível com SDK 58.
 
-   ```bash
-   npm install
-   ```
+## Conta demonstrativa
 
-2. Start the app
+- E-mail: `aluno@antesdachuva.com`
+- Senha: `Chuva123!`
 
-   ```bash
-   npx expo start
-   ```
+O login é simulado e a sessão fica somente em memória. Não há autenticação de servidor. Nenhuma senha é armazenada no AsyncStorage.
 
-In the output, you'll find options to open the app in a
+## Funcionalidades
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Login com validação e saída da conta; rotas internas protegidas pela sessão.
+- Lista de ocorrências com busca por título, local e categoria.
+- Cadastro com título, endereço, categoria, prioridade e descrição; validação de campos e indicação de salvamento.
+- Consulta dos detalhes com data e hora do registro.
+- Persistência local na chave `@antes-da-chuva/incidents:v1` com um exemplo demonstrativo no primeiro uso.
+- Estados de carregamento, busca vazia, falha de leitura/gravação e registro inexistente.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Dados persistem após recarregar ou fechar o app. No navegador, são específicos da origem e do perfil utilizado. Limpar os dados do aplicativo/navegador remove os registros. Não há sincronização, envio a órgãos públicos, fotos ou geolocalização nesta etapa.
 
-## Get a fresh project
+## Organização
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+src/app/                  # Login e navegação raiz
+src/app/(app)/            # Lista, cadastro e detalhe protegidos
+src/components/incident-ui.tsx # Componentes e estilos compartilhados
+src/context/AppContext.tsx # Sessão e estado das ocorrências
+src/services/storage.ts   # Leitura, validação e gravação local
+src/types/incident.ts     # Tipos e opções dos formulários
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Verificação manual
 
-### Other setup steps
+1. Tente entrar com credenciais inválidas e depois use a conta demonstrativa.
+2. Consulte o registro de exemplo e volte à lista.
+3. Tente salvar o formulário vazio; preencha todos os campos e salve.
+4. Busque o novo registro por título, local ou categoria e consulte seus detalhes.
+5. Recarregue o aplicativo, faça login e confirme que o cadastro permanece.
+6. Saia da conta e confirme que o botão voltar não permite acessar as telas internas.
+7. Repita no navegador e em um dispositivo Android/iOS disponível.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Validação e commits
 
-## Learn more
+Execute `npx tsc --noEmit`, `npm run lint` e `npx expo-doctor`. Evite `npm audit fix --force`, que pode alterar o SDK.
 
-To learn more about developing your project with Expo, look at the following resources:
+Revise `git status` e `git diff` antes de versionar. Sugestão de commit após validar:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+git add src app.json README.md .gitignore package.json package-lock.json eslint.config.js
+git commit -m "feat: implementa estrutura inicial do Antes da Chuva"
+git push origin main
+```
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Próximos passos: conferir o enunciado integral e critérios de entrega; testar em aparelho; substituir as imagens padrão do Expo pela identidade visual final; preparar capturas e vídeo de demonstração conforme solicitado pela disciplina.
