@@ -33,7 +33,7 @@ export async function initializeIncidents(): Promise<Incident[]> {
 export async function getIncidents() { return initializeIncidents(); }
 export async function getIncidentById(id: string) { return (await getIncidents()).find(item => item.id === id); }
 export async function saveIncident(input: IncidentInput): Promise<Incident> {
-  if (input.title.trim().length < 3 || input.address.trim().length < 5 || input.neighborhood.trim().length < 2 || input.description.trim().length < 10 || !categories.includes(input.category)) throw new Error('Preencha os campos corretamente.');
+  validateInput(input);
   const item: Incident = { ...input, title: input.title.trim(), address: input.address.trim(), neighborhood: input.neighborhood.trim(), description: input.description.trim(), id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`, status: 'ABERTA', createdAt: new Date().toISOString() };
   const items = await getIncidents();
   await AsyncStorage.setItem(KEY, JSON.stringify([item, ...items]));
@@ -62,4 +62,25 @@ export async function updateIncidentStatus(id: string, status: IncidentStatus): 
   items[index] = updated;
   await AsyncStorage.setItem(KEY, JSON.stringify(items));
   return updated;
+}
+
+function validateInput(input: IncidentInput) {
+  if (input.title.trim().length < 3 || input.title.trim().length > 80 || input.address.trim().length < 5 || input.address.trim().length > 180 || input.neighborhood.trim().length < 2 || input.neighborhood.trim().length > 100 || input.description.trim().length < 10 || input.description.trim().length > 1500 || !categories.includes(input.category)) throw new Error('Preencha os campos corretamente.');
+}
+export async function updateIncident(id: string, input: IncidentInput): Promise<Incident> {
+  if (!await getSession()) throw new Error('Entre para editar.');
+  validateInput(input);
+  const items = await getIncidents();
+  const index = items.findIndex(item => item.id === id);
+  if (index === -1) throw new Error('Ocorrência não encontrada.');
+  const updated: Incident = { ...items[index], title: input.title.trim(), address: input.address.trim(), neighborhood: input.neighborhood.trim(), description: input.description.trim(), category: input.category };
+  items[index] = updated;
+  await AsyncStorage.setItem(KEY, JSON.stringify(items));
+  return updated;
+}
+export async function deleteIncident(id: string): Promise<void> {
+  if (!await getSession()) throw new Error('Entre para excluir.');
+  const items = await getIncidents();
+  if (!items.some(item => item.id === id)) throw new Error('Ocorrência não encontrada.');
+  await AsyncStorage.setItem(KEY, JSON.stringify(items.filter(item => item.id !== id)));
 }

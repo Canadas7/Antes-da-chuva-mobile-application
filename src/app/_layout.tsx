@@ -11,6 +11,7 @@ function Navigation() {
     <Stack.Protected guard={signedIn}>
       <Stack.Screen name="index" options={{ title: 'Antes da Chuva' }} />
       <Stack.Screen name="nova-ocorrencia" options={{ title: 'Nova ocorrência' }} />
+      <Stack.Screen name="editar/[id]" options={{ title: 'Editar ocorrência' }} />
       <Stack.Screen name="detalhe/[id]" options={{ title: 'Detalhes da ocorrência' }} />
     </Stack.Protected>
     <Stack.Protected guard={signedIn && role === 'GESTOR'}>

@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { getIncidents, updateIncidentStatus, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
+import { getIncidents, updateIncident, deleteIncident, updateIncidentStatus, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
 import type { Incident, IncidentInput, IncidentStatus, Role } from '../types/incident';
 
 type AppState = {
   role: Role | null; updateStatus: (id: string, status: IncidentStatus) => Promise<void>; signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>; sessionLoading: boolean; reload: () => Promise<void>;
+  editIncident: (id: string, input: IncidentInput) => Promise<void>;
+  removeIncident: (id: string) => Promise<void>;
   addIncident: (input: IncidentInput) => Promise<string>;
 };
 const Context = createContext<AppState | null>(null);
@@ -63,7 +65,23 @@ export function AppProvider({ children }: PropsWithChildren) {
       setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
-  return <Context.Provider value={{ role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
+  async function editIncident(id: string, input: IncidentInput) {
+    if (!signedIn || saving.current || loading || error) throw new Error('Edição indisponível.');
+    saving.current = true;
+    try {
+      const updated = await updateIncident(id, input);
+      setIncidents(previous => previous.map(item => item.id === id ? updated : item));
+    } finally { saving.current = false; }
+  }
+  async function removeIncident(id: string) {
+    if (!signedIn || saving.current || loading || error) throw new Error('Exclusão indisponível.');
+    saving.current = true;
+    try {
+      await deleteIncident(id);
+      setIncidents(previous => previous.filter(item => item.id !== id));
+    } finally { saving.current = false; }
+  }
+  return <Context.Provider value={{ editIncident, removeIncident, role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
 }
 export function useApp() {
   const context = useContext(Context);
