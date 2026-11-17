@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, Text, View, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
-import { Action, Brand, CityIllustration, colors, Field, ui } from '../components/incident-ui';
+import { Action, CityIllustration, colors, Field, ui } from '../components/incident-ui';
 import { useApp } from '../context/AppContext';
 
 export default function Login() {
@@ -24,7 +24,6 @@ export default function Login() {
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: wide ? 48 : 20 }}>
       <View style={{ width: '100%', maxWidth: 1080, alignSelf: 'center', flexDirection: wide ? 'row' : 'column', gap: wide ? 0 : 24, backgroundColor: wide ? '#FFFFFF' : 'transparent', borderRadius: 28, overflow: 'hidden', borderWidth: wide ? 1 : 0, borderColor: colors.border }}>
         <View style={{ flex: 1, backgroundColor: colors.navy, borderRadius: wide ? 0 : 24, padding: wide ? 44 : 28, justifyContent: 'space-between', gap: 36 }}>
-          <Brand light />
           <View style={{ gap: 18 }}><Text style={{ color: colors.mint, letterSpacing: 2, fontSize: 10, fontWeight: '700' }}>ZELADORIA PREVENTIVA</Text>
             <Text style={[ui.heroTitle, { fontSize: wide ? 46 : 34, lineHeight: wide ? 53 : 41 }]}>O melhor momento{wide ? '\n' : ' '}para cuidar é{wide ? '\n' : ' '}antes da chuva.</Text>
             <Text style={ui.heroCopy}>Um olhar atento à sua rua pode fazer a diferença. Registre riscos e acompanhe os cuidados com o seu bairro.</Text>
@@ -40,7 +39,7 @@ export default function Login() {
             {error ? <Text accessibilityRole="alert" style={ui.error}>{error}</Text> : null}
             <Action title={busy ? 'Entrando…' : 'Entrar na minha conta  →'} disabled={busy} onPress={() => { void submit(); }} />
           </View>
-          <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 20, gap: 6 }}><Text style={ui.eyebrow}>EXPLORE O PROTÓTIPO</Text><Text selectable style={ui.subtitle}>teste@antesdachuva.com · Senha: 123456</Text><Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19 }}>Seus registros ficam neste dispositivo. Este protótipo não envia solicitações aos órgãos públicos.</Text></View>
+
         </View>
       </View>
     </ScrollView>
