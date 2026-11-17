@@ -1,15 +1,16 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { getIncidents, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
-import type { Incident, IncidentInput } from '../types/incident';
+import { getIncidents, updateIncidentStatus, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
+import type { Incident, IncidentInput, IncidentStatus, Role } from '../types/incident';
 
 type AppState = {
-  signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
+  role: Role | null; updateStatus: (id: string, status: IncidentStatus) => Promise<void>; signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>; sessionLoading: boolean; reload: () => Promise<void>;
   addIncident: (input: IncidentInput) => Promise<string>;
 };
 const Context = createContext<AppState | null>(null);
 export function AppProvider({ children }: PropsWithChildren) {
+  const [role, setRole] = useState<Role | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -31,18 +32,20 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, []);
   useEffect(() => {
     let active = true;
-    getSession().then(session => { if (active) setSignedIn(!!session); })
+    getSession().then(session => { if (active) { setSignedIn(!!session); setRole(session?.role ?? null); } })
       .catch(() => { if (active) setSignedIn(false); })
       .finally(() => { if (active) setSessionLoading(false); });
     return () => { active = false; };
   }, []);
   async function login(email: string, password: string) {
     const normalized = email.trim().toLowerCase();
-    if (normalized !== 'teste@antesdachuva.com' || password !== '123456') return false;
-    await saveSession({ email: normalized });
+    if (!['teste@antesdachuva.com', 'gestor@antesdachuva.com'].includes(normalized) || password !== '123456') return false;
+    const nextRole: Role = normalized === 'gestor@antesdachuva.com' ? 'GESTOR' : 'CIDADAO';
+    await saveSession({ email: normalized, role: nextRole });
+    setRole(nextRole);
     setSignedIn(true); return true;
   }
-  async function logout() { await clearSession(); setSignedIn(false); }
+  async function logout() { await clearSession(); setSignedIn(false); setRole(null); }
   async function addIncident(input: IncidentInput) {
     if (!signedIn || loading || error || saving.current) throw new Error('Cadastro indisponível.');
     saving.current = true;
@@ -52,7 +55,15 @@ export function AppProvider({ children }: PropsWithChildren) {
       return item.id;
     } finally { saving.current = false; }
   }
-  return <Context.Provider value={{ signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
+  async function updateStatus(id: string, status: IncidentStatus) {
+    if (role !== 'GESTOR' || saving.current || loading || error) throw new Error('Atualização indisponível.');
+    saving.current = true;
+    try {
+      const updated = await updateIncidentStatus(id, status);
+      setIncidents(previous => previous.map(item => item.id === id ? updated : item));
+    } finally { saving.current = false; }
+  }
+  return <Context.Provider value={{ role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
 }
 export function useApp() {
   const context = useContext(Context);
