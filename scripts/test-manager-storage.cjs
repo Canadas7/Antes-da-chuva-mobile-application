@@ -92,5 +92,41 @@ function load(relative) {
   const migrated = (await service.getIncidents())[0];
   assert.equal(migrated.address, 'Endereço antigo');
   assert.equal(migrated.neighborhood, 'Não informado');
-  console.log('PASS: roles, denied access, status persistence, validation, write failure, logout, legacy records, edit validation, preserved metadata, delete, empty list and write failures');
+  const key = '@antes-da-chuva/incidents:v1';
+  const legacyIncident = {
+    id: 'legacy-priority', title: 'Bueiro com acúmulo de folhas',
+    location: 'Rua das Flores, 120 — Centro', category: 'Bueiro obstruído',
+    description: 'Folhas impedem o escoamento de água.',
+    priority: 'Média', createdAt: '2026-11-17T12:00:00.000Z',
+  };
+  const legacyData = JSON.stringify([
+    legacyIncident,
+    { ...first[1], priority: null, updates: [{
+      id: 'legacy-update', status: 'EM_ANALISE', priority: 'Alta',
+      createdAt: '2026-11-17T13:00:00.000Z',
+    }] },
+  ]);
+  memory.set(key, legacyData);
+  const recovered = await service.getIncidents();
+  assert.equal(recovered.length, 2);
+  assert.equal(recovered[0].priority, 'MEDIA');
+  assert.equal(recovered[0].address, legacyIncident.location);
+  assert.equal(recovered[1].priority, undefined);
+  assert.equal(recovered[1].updates[0].priority, 'ALTA');
+  assert.equal(recovered[1].updates[0].note, '');
+  assert.equal(memory.get(key), legacyData, 'Reading must not rewrite existing data');
+
+  await service.saveSession({ email: 'gestor@antesdachuva.com', role: 'GESTOR' });
+  await service.manageIncident(legacyIncident.id, { status: 'EM_ANALISE', priority: 'MEDIA' });
+  const afterSaving = await service.getIncidents();
+  assert.equal(afterSaving.length, 2);
+  assert.equal(afterSaving[0].updates[0].status, 'EM_ANALISE');
+  assert.equal(afterSaving[1].updates[0].id, 'legacy-update');
+
+  const invalidData = '[malformed';
+  memory.set(key, invalidData);
+  await assert.rejects(service.getIncidents());
+  await assert.rejects(service.manageIncident(legacyIncident.id, { status: 'RESOLVIDA' }));
+  assert.equal(memory.get(key), invalidData, 'An unreadable store must not be overwritten');
+  console.log('PASS: roles, denied access, status persistence, validation, write failure, logout, legacy records and priorities, safe reads, edit validation, preserved metadata, delete, empty list and write failures');
 })().catch(error => { console.error(error); process.exitCode = 1; });

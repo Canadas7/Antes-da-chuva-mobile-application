@@ -1,23 +1,58 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { categories, priorities, statuses, type ManagementInput, type IncidentUpdate, type IncidentStatus, type Incident, type IncidentInput, type Session } from '../types/incident';
+import { categories, priorities, statuses, type ManagementInput, type IncidentUpdate, type IncidentPriority, type IncidentStatus, type Incident, type IncidentInput, type Session } from '../types/incident';
 
 const KEY = '@antes-da-chuva/incidents:v1';
 const SESSION_KEY = '@antes-da-chuva/session:v1';
 const TEST_EMAIL = 'teste@antesdachuva.com';
 const MANAGER_EMAIL = 'gestor@antesdachuva.com';
+
+function normalizePriority(value: unknown): IncidentPriority | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'string') {
+    // The first version saved display labels such as "Média" in the same storage key.
+    const key = value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    const priority = priorities.find(candidate => candidate === key);
+    if (priority) return priority;
+    if (!key) return undefined;
+  }
+  throw new Error('Prioridade inválida.');
+}
+
+function normalizeUpdate(value: unknown): IncidentUpdate {
+  if (!value || typeof value !== 'object') throw new Error('Histórico inválido.');
+  const { id, status, priority, createdAt, note = '' } = value as Partial<IncidentUpdate>;
+  if (typeof id !== 'string' || !status || !statuses.includes(status)
+    || typeof createdAt !== 'string' || Number.isNaN(Date.parse(createdAt))
+    || (note !== null && typeof note !== 'string')) {
+    throw new Error('Histórico inválido.');
+  }
+  return { id, status, priority: normalizePriority(priority), note: note ?? '', createdAt };
+}
+
 function normalize(value: unknown): Incident {
   if (!value || typeof value !== 'object') throw new Error('Registro inválido.');
   const item = value as Record<string, unknown>;
-  // Preserve records created by the first prototype without erasing local data.
   const address = item.address ?? item.location;
   const neighborhood = item.neighborhood ?? 'Não informado';
   const status = item.status ?? 'ABERTA';
-  if (![item.id, item.title, item.description, address, neighborhood, item.createdAt].every(v => typeof v === 'string' && v.trim())
-    || !categories.includes(item.category as Incident['category']) || !statuses.includes(status as IncidentStatus) || Number.isNaN(Date.parse(item.createdAt as string))) throw new Error('Registro inválido.');
   const updates = item.updates ?? [];
-  if (!Array.isArray(updates) || !updates.every((entry: IncidentUpdate) => entry && typeof entry.id === 'string' && typeof entry.note === 'string' && typeof entry.createdAt === 'string' && !Number.isNaN(Date.parse(entry.createdAt)) && statuses.includes(entry.status) && (entry.priority === undefined || priorities.includes(entry.priority)))) throw new Error('Histórico inválido.');
-  if (item.priority !== undefined && !priorities.includes(item.priority as NonNullable<ManagementInput['priority']>)) throw new Error('Prioridade inválida.');
-  return { priority: item.priority as ManagementInput['priority'] | undefined, updates, id: item.id as string, title: item.title as string, description: (item.description as string).replace(/^Exemplo demonstrativo: /, ''), category: item.category as Incident['category'], address: address as string, neighborhood: neighborhood as string, status: status as IncidentStatus, createdAt: item.createdAt as string };
+  if (![item.id, item.title, item.description, address, neighborhood, item.createdAt].every(v => typeof v === 'string' && v.trim())
+    || !categories.includes(item.category as Incident['category']) || !statuses.includes(status as IncidentStatus) || Number.isNaN(Date.parse(item.createdAt as string))) {
+    throw new Error('Registro inválido.');
+  }
+  if (!Array.isArray(updates)) throw new Error('Histórico inválido.');
+  return {
+    id: item.id as string,
+    title: item.title as string,
+    description: (item.description as string).replace(/^Exemplo demonstrativo: /, ''),
+    category: item.category as Incident['category'],
+    address: address as string,
+    neighborhood: neighborhood as string,
+    status: status as IncidentStatus,
+    priority: normalizePriority(item.priority),
+    updates: updates.map(normalizeUpdate),
+    createdAt: item.createdAt as string,
+  };
 }
 export async function initializeIncidents(): Promise<Incident[]> {
   const raw = await AsyncStorage.getItem(KEY);
