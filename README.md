@@ -57,4 +57,4 @@ git commit -m "feat: implementa estrutura inicial do Antes da Chuva"
 git push origin main
 ```
 
-Próximos passos: conferir o enunciado integral e critérios de entrega; testar em aparelho; substituir as imagens padrão do Expo pela identidade visual final; preparar capturas e vídeo de demonstração conforme solicitado pela disciplina.
+
