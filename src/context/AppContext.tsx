@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { getIncidents, updateIncident, deleteIncident, updateIncidentStatus, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
-import type { Incident, IncidentInput, IncidentStatus, Role } from '../types/incident';
+import { getIncidents, updateIncident, deleteIncident, manageIncident, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
+import type { Incident, IncidentInput, ManagementInput, Role } from '../types/incident';
 
 type AppState = {
-  role: Role | null; updateStatus: (id: string, status: IncidentStatus) => Promise<void>; signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
+  role: Role | null; updateStatus: (id: string, input: ManagementInput) => Promise<void>; signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>; sessionLoading: boolean; reload: () => Promise<void>;
   editIncident: (id: string, input: IncidentInput) => Promise<void>;
@@ -49,7 +49,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   }
   async function logout() { await clearSession(); setSignedIn(false); setRole(null); }
   async function addIncident(input: IncidentInput) {
-    if (!signedIn || loading || error || saving.current) throw new Error('Cadastro indisponível.');
+    if (role !== 'CIDADAO' || loading || error || saving.current) throw new Error('Cadastro indisponível.');
     saving.current = true;
     try {
       const item = await saveIncident(input);
@@ -57,16 +57,16 @@ export function AppProvider({ children }: PropsWithChildren) {
       return item.id;
     } finally { saving.current = false; }
   }
-  async function updateStatus(id: string, status: IncidentStatus) {
+  async function updateStatus(id: string, input: ManagementInput) {
     if (role !== 'GESTOR' || saving.current || loading || error) throw new Error('Atualização indisponível.');
     saving.current = true;
     try {
-      const updated = await updateIncidentStatus(id, status);
+      const updated = await manageIncident(id, input);
       setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
   async function editIncident(id: string, input: IncidentInput) {
-    if (!signedIn || saving.current || loading || error) throw new Error('Edição indisponível.');
+    if (role !== 'CIDADAO' || saving.current || loading || error) throw new Error('Edição indisponível.');
     saving.current = true;
     try {
       const updated = await updateIncident(id, input);
@@ -74,7 +74,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     } finally { saving.current = false; }
   }
   async function removeIncident(id: string) {
-    if (!signedIn || saving.current || loading || error) throw new Error('Exclusão indisponível.');
+    if (role !== 'CIDADAO' || saving.current || loading || error) throw new Error('Exclusão indisponível.');
     saving.current = true;
     try {
       await deleteIncident(id);

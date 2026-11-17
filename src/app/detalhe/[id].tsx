@@ -2,10 +2,11 @@ import { useState, useRef } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { Action, Page, ui } from '../../components/incident-ui';
-import { statusLabels } from '../../types/incident';
+import { IncidentHistory } from '../../components/IncidentHistory';
+import { statusLabels, priorityLabels } from '../../types/incident';
 import { useApp } from '../../context/AppContext';
 export default function IncidentDetails() {
-  const { id } = useLocalSearchParams<{ id: string }>(); const { incidents, loading, error, reload, removeIncident } = useApp();
+  const { id } = useLocalSearchParams<{ id: string }>(); const { incidents, loading, error, reload, removeIncident, role } = useApp();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -21,7 +22,11 @@ export default function IncidentDetails() {
   if (loading) return <Page><ActivityIndicator accessibilityLabel="Carregando ocorrência" /></Page>;
   if (error) return <Page><Text style={ui.error}>{error}</Text><Action title="Tentar novamente" onPress={() => { void reload(); }} /></Page>;
   if (!item) return <Page><Text style={ui.heading}>Ocorrência não encontrada</Text><Action title="Voltar aos registros" onPress={() => router.replace('/')} /></Page>;
-  return <Page><Text style={ui.eyebrow}>REGISTRO DA COMUNIDADE</Text><Text style={ui.heading}>{item.title}</Text><View style={ui.card}><Text style={ui.label}>Endereço</Text><Text selectable style={ui.subtitle}>{item.address}</Text><Text style={ui.label}>Tipo</Text><Text style={ui.subtitle}>{item.category}</Text><Text style={ui.label}>Bairro</Text><Text style={ui.subtitle}>{item.neighborhood}</Text><Text style={ui.label}>Status</Text><View style={ui.badge}><Text style={ui.badgeText}>●  {statusLabels[item.status]}</Text></View><Text style={ui.label}>Registrado em</Text><Text style={ui.subtitle}>{new Date(item.createdAt).toLocaleString('pt-BR')}</Text></View><Text style={ui.label}>O que foi observado</Text><Text selectable style={ui.subtitle}>{item.description}</Text><Action title="Editar ocorrência" disabled={deleting} onPress={() => router.push({ pathname: '/editar/[id]', params: { id: item.id } })} />
+  return <Page><Text style={ui.eyebrow}>REGISTRO DA COMUNIDADE</Text><Text style={ui.heading}>{item.title}</Text><View style={ui.card}><Text style={ui.label}>Endereço</Text><Text selectable style={ui.subtitle}>{item.address}</Text><Text style={ui.label}>Tipo</Text><Text style={ui.subtitle}>{item.category}</Text><Text style={ui.label}>Bairro</Text><Text style={ui.subtitle}>{item.neighborhood}</Text><Text style={ui.label}>Status</Text><View style={ui.badge}><Text style={ui.badgeText}>●  {statusLabels[item.status]}</Text></View><Text style={ui.label}>Registrado em</Text><Text style={ui.subtitle}>{new Date(item.createdAt).toLocaleString('pt-BR')}</Text></View><Text style={ui.label}>O que foi observado</Text><Text selectable style={ui.subtitle}>{item.description}</Text><Text style={ui.label}>Prioridade de atendimento</Text><Text style={ui.subtitle}>{item.priority ? priorityLabels[item.priority] : 'Aguardando triagem'}</Text>
+    <IncidentHistory item={item} />
+    {role === 'GESTOR' ? <Action title="Gerenciar chamado" onPress={() => router.push({ pathname: '/gestor', params: { id: item.id } })} /> : <>
+<Action title="Editar ocorrência" disabled={deleting} onPress={() => router.push({ pathname: '/editar/[id]', params: { id: item.id } })} />
     {confirming ? <View style={ui.card}><Text style={ui.label}>Excluir esta ocorrência?</Text><Text style={ui.subtitle}>“{item.title}” será removida dos registros. Esta ação não pode ser desfeita.</Text>{deleteError ? <Text accessibilityRole="alert" style={ui.error}>{deleteError}</Text> : null}<Action title={deleting ? 'Excluindo…' : 'Confirmar exclusão'} disabled={deleting} onPress={() => { void confirmDelete(); }} /><Action title="Cancelar exclusão" secondary disabled={deleting} onPress={() => { setConfirming(false); setDeleteError(''); }} /></View> : <Action title="Excluir ocorrência" secondary onPress={() => setConfirming(true)} />}
+</>}
     <Action title="Voltar aos registros" secondary disabled={deleting} onPress={() => router.canGoBack() ? router.back() : router.replace('/')} /></Page>;
 }
