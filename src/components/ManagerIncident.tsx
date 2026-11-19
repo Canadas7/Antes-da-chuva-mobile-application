@@ -2,23 +2,20 @@ import { useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useApp } from '../context/AppContext';
-import { priorities, priorityLabels, statuses, statusLabels, type Incident } from '../types/incident';
+import { statuses, statusLabels, type Incident } from '../types/incident';
 import { IncidentHistory } from './IncidentHistory';
 import { Action, Choices, colors, Field, Page, ui } from './incident-ui';
 
-const noPriority = 'Sem prioridade';
 const statusOptions = statuses.map(status => statusLabels[status]);
-const priorityOptions = [noPriority, ...priorities.map(priority => priorityLabels[priority])];
 
 export function ManagerIncident({ item }: { item: Incident }) {
   const { updateStatus } = useApp();
   const [status, setStatus] = useState(item.status);
-  const [priority, setPriority] = useState(item.priority);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<'saved' | 'error' | null>(null);
   const pending = useRef(false);
-  const changed = status !== item.status || priority !== item.priority || note.trim() !== '';
+  const changed = status !== item.status && note.trim() !== '';
 
   async function save() {
     if (pending.current || !changed) return;
@@ -26,7 +23,7 @@ export function ManagerIncident({ item }: { item: Incident }) {
     setBusy(true);
     setFeedback(null);
     try {
-      await updateStatus(item.id, { status, priority, note });
+      await updateStatus(item.id, { status, note });
       setNote('');
       setFeedback('saved');
     } catch {
@@ -55,7 +52,7 @@ export function ManagerIncident({ item }: { item: Incident }) {
         <Text accessibilityRole="header" style={styles.sectionTitle}>Atendimento</Text>
         <Choices
           label="Status"
-          values={statusOptions}
+          values={statusOptions.filter(label => !['Aberta', 'Cancelada'].includes(label))}
           value={statusLabels[status]}
           disabled={busy}
           onChange={label => {
@@ -64,20 +61,12 @@ export function ManagerIncident({ item }: { item: Incident }) {
             setFeedback(null);
           }}
         />
-        <Choices
-          label="Prioridade"
-          values={priorityOptions}
-          value={priority ? priorityLabels[priority] : noPriority}
-          disabled={busy}
-          onChange={label => {
-            setPriority(priorities.find(value => priorityLabels[value] === label));
-            setFeedback(null);
-          }}
-        />
+        <Text style={ui.subtitle}>A prioridade é calculada pela triagem de IA no servidor.</Text>
         <Field
-          label="Observação para o morador (opcional)"
+          label="Observação para o morador (obrigatória)"
           placeholder="Ex.: vistoria agendada"
           multiline
+          maxLength={500}
           style={styles.note}
           value={note}
           editable={!busy}

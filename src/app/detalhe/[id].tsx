@@ -18,7 +18,7 @@ export default function IncidentDetails() {
     if (pending.current) return;
     pending.current = true; setDeleting(true); setDeleteError('');
     try { await removeIncident(id); router.replace('/'); }
-    catch { setDeleteError('Não foi possível excluir. A ocorrência foi mantida. Tente novamente.'); }
+    catch (error) { setDeleteError(error instanceof Error ? error.message : 'Não foi possível cancelar a ocorrência.'); }
     finally { pending.current = false; setDeleting(false); }
   }
   const [item, setItem] = useState<Incident>();
@@ -43,7 +43,7 @@ export default function IncidentDetails() {
     {item.aiGuidance ? <Text selectable style={ui.subtitle}>{item.aiGuidance}</Text> : null}
     <Action title="Atualizar detalhes e triagem" secondary onPress={() => { void reload(); }} />
     <IncidentHistory item={item} />
-    <Action title="Editar ocorrência" disabled={deleting} onPress={() => router.push({ pathname: '/editar/[id]', params: { id: item.id } })} />
-    {confirming ? <View style={ui.card}><Text style={ui.label}>Excluir esta ocorrência?</Text><Text style={ui.subtitle}>“{item.title}” será removida dos registros. Esta ação não pode ser desfeita.</Text>{deleteError ? <Text accessibilityRole="alert" style={ui.error}>{deleteError}</Text> : null}<Action title={deleting ? 'Excluindo…' : 'Confirmar exclusão'} disabled={deleting} onPress={() => { void confirmDelete(); }} /><Action title="Cancelar exclusão" secondary disabled={deleting} onPress={() => { setConfirming(false); setDeleteError(''); }} /></View> : <Action title="Excluir ocorrência" secondary onPress={() => setConfirming(true)} />}
+    <Action title="Editar ocorrência" disabled={deleting || item.status !== 'ABERTA'} onPress={() => router.push({ pathname: '/editar/[id]', params: { id: item.id } })} />
+    {confirming ? <View style={ui.card}><Text style={ui.label}>Cancelar esta ocorrência?</Text><Text style={ui.subtitle}>“{item.title}” será cancelada. O histórico será preservado no servidor.</Text>{deleteError ? <Text accessibilityRole="alert" style={ui.error}>{deleteError}</Text> : null}<Action title={deleting ? 'Cancelando…' : 'Confirmar cancelamento'} disabled={deleting} onPress={() => { void confirmDelete(); }} /><Action title="Voltar" secondary disabled={deleting} onPress={() => { setConfirming(false); setDeleteError(''); }} /></View> : <Action title="Cancelar ocorrência" disabled={item.status !== 'ABERTA'} secondary onPress={() => setConfirming(true)} />}
     <Action title="Voltar aos registros" secondary disabled={deleting} onPress={() => router.canGoBack() ? router.back() : router.replace('/')} /></Page>;
 }

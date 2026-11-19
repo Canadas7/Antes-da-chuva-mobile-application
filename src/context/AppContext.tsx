@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { updateIncident, deleteIncident, manageIncident } from '../services/storage';
-import { getCategories, getIncidents, saveIncident } from '../services/incidentService';
+import { getCategories, getIncidents, saveIncident, updateIncident, deleteIncident, manageIncident } from '../services/incidentService';
 import type { Category } from '../types/backend';
 import { authService } from '../services/authService';
 import { configureSession } from '../services/api';
@@ -87,7 +86,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     if (role !== 'GESTOR' || saving.current || loading || error) throw new Error('Atualização indisponível.');
     saving.current = true;
     try {
-      const updated = await manageIncident(id, input);
+      const updated = await manageIncident(id, input, categories);
       setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
@@ -95,7 +94,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     if (role !== 'CIDADAO' || saving.current || loading || error) throw new Error('Edição indisponível.');
     saving.current = true;
     try {
-      const updated = await updateIncident(id, input);
+      const updated = await updateIncident(id, input, categories);
       setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
@@ -104,7 +103,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     saving.current = true;
     try {
       await deleteIncident(id);
-      setIncidents(previous => previous.filter(item => item.id !== id));
+      setIncidents(previous => previous.map(item => item.id === id ? { ...item, status: 'CANCELADA' } : item));
     } finally { saving.current = false; }
   }
   return <Context.Provider value={{ categories, session, register, editIncident, removeIncident, role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
