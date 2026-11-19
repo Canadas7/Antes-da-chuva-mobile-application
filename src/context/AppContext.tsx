@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { updateIncident, deleteIncident, manageIncident, saveIncident } from '../services/storage';
-import { getCategories, getIncidents } from '../services/incidentService';
+import { updateIncident, deleteIncident, manageIncident } from '../services/storage';
+import { getCategories, getIncidents, saveIncident } from '../services/incidentService';
 import type { Category } from '../types/backend';
 import { authService } from '../services/authService';
 import { configureSession } from '../services/api';
@@ -78,7 +78,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     if (role !== 'CIDADAO' || loading || error || saving.current) throw new Error('Cadastro indisponível.');
     saving.current = true;
     try {
-      const item = await saveIncident(input);
+      const item = await saveIncident(input, categories);
       setIncidents(previous => [item, ...previous]);
       return item.id;
     } finally { saving.current = false; }

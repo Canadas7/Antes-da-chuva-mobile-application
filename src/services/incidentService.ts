@@ -1,6 +1,6 @@
 import { allPages, api } from './api';
 import { statusFromApi, urgencyFromApi, type Category, type IncidentResponse, type UpdateResponse } from '../types/backend';
-import type { Incident, Role } from '../types/incident';
+import type { Incident, IncidentInput, Role } from '../types/incident';
 export const getCategories = () => allPages<Category>('/categories');
 function mapIncident(item: IncidentResponse, categories: Category[]): Incident {
   return { ...item, id: String(item.id), category: categories.find(category => category.id === item.categoryId)?.name ?? `Categoria ${item.categoryId}`, status: statusFromApi[item.status], priority: item.urgency ? urgencyFromApi[item.urgency] : undefined };
@@ -12,4 +12,11 @@ export async function getIncidentById(id: string, categories: Category[]) {
   const item = await api<IncidentResponse>(`/incidents/${encodeURIComponent(id)}`);
   const updates = await api<UpdateResponse[]>(`/incidents/${encodeURIComponent(id)}/updates`);
   return { ...mapIncident(item, categories), updates: updates.map(update => ({ ...update, id: String(update.id), status: statusFromApi[update.newStatus] })) };
+}
+function requestBody(input: IncidentInput) {
+  if (!input.categoryId) throw new Error('Selecione uma categoria carregada do servidor.');
+  return { categoryId: input.categoryId, title: input.title.trim(), description: input.description.trim(), address: input.address.trim(), neighborhood: input.neighborhood.trim(), latitude: input.latitude ?? null, longitude: input.longitude ?? null };
+}
+export async function saveIncident(input: IncidentInput, categories: Category[]) {
+  return mapIncident(await api<IncidentResponse>('/incidents', 'POST', requestBody(input)), categories);
 }
