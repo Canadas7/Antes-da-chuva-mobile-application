@@ -37,7 +37,7 @@ function normalize(value: unknown): Incident {
   const status = item.status ?? 'ABERTA';
   const updates = item.updates ?? [];
   if (![item.id, item.title, item.description, address, neighborhood, item.createdAt].every(v => typeof v === 'string' && v.trim())
-    || !categories.includes(item.category as Incident['category']) || !statuses.includes(status as IncidentStatus) || Number.isNaN(Date.parse(item.createdAt as string))) {
+    || !categories.some(category => category === item.category) || !statuses.includes(status as IncidentStatus) || Number.isNaN(Date.parse(item.createdAt as string))) {
     throw new Error('Registro inválido.');
   }
   if (!Array.isArray(updates)) throw new Error('Histórico inválido.');
@@ -122,7 +122,7 @@ export async function manageIncident(id: string, input: ManagementInput): Promis
 }
 
 function validateInput(input: IncidentInput) {
-  if (input.title.trim().length < 3 || input.title.trim().length > 80 || input.address.trim().length < 5 || input.address.trim().length > 180 || input.neighborhood.trim().length < 2 || input.neighborhood.trim().length > 100 || input.description.trim().length < 10 || input.description.trim().length > 1500 || !categories.includes(input.category)) throw new Error('Preencha os campos corretamente.');
+  if (input.title.trim().length < 3 || input.title.trim().length > 80 || input.address.trim().length < 5 || input.address.trim().length > 180 || input.neighborhood.trim().length < 2 || input.neighborhood.trim().length > 100 || input.description.trim().length < 10 || input.description.trim().length > 1500 || !categories.some(category => category === input.category)) throw new Error('Preencha os campos corretamente.');
 }
 export async function updateIncident(id: string, input: IncidentInput): Promise<Incident> {
   if ((await getSession())?.role !== 'CIDADAO') throw new Error('O gestor não altera os dados do relato.');
