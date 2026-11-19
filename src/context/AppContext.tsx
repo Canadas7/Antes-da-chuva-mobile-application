@@ -76,34 +76,38 @@ export function AppProvider({ children }: PropsWithChildren) {
   async function addIncident(input: IncidentInput) {
     if (role !== 'CIDADAO' || loading || error || saving.current) throw new Error('Cadastro indisponível.');
     saving.current = true;
+    const current = sessionRef.current;
     try {
       const item = await saveIncident(input, categories);
-      setIncidents(previous => [item, ...previous]);
+      if (current === sessionRef.current) setIncidents(previous => [item, ...previous]);
       return item.id;
     } finally { saving.current = false; }
   }
   async function updateStatus(id: string, input: ManagementInput) {
     if (role !== 'GESTOR' || saving.current || loading || error) throw new Error('Atualização indisponível.');
     saving.current = true;
+    const current = sessionRef.current;
     try {
       const updated = await manageIncident(id, input, categories);
-      setIncidents(previous => previous.map(item => item.id === id ? updated : item));
+      if (current === sessionRef.current) setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
   async function editIncident(id: string, input: IncidentInput) {
     if (role !== 'CIDADAO' || saving.current || loading || error) throw new Error('Edição indisponível.');
     saving.current = true;
+    const current = sessionRef.current;
     try {
       const updated = await updateIncident(id, input, categories);
-      setIncidents(previous => previous.map(item => item.id === id ? updated : item));
+      if (current === sessionRef.current) setIncidents(previous => previous.map(item => item.id === id ? updated : item));
     } finally { saving.current = false; }
   }
   async function removeIncident(id: string) {
     if (role !== 'CIDADAO' || saving.current || loading || error) throw new Error('Exclusão indisponível.');
     saving.current = true;
+    const current = sessionRef.current;
     try {
       await deleteIncident(id);
-      setIncidents(previous => previous.map(item => item.id === id ? { ...item, status: 'CANCELADA' } : item));
+      if (current === sessionRef.current) setIncidents(previous => previous.map(item => item.id === id ? { ...item, status: 'CANCELADA' } : item));
     } finally { saving.current = false; }
   }
   return <Context.Provider value={{ categories, session, register, editIncident, removeIncident, role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
