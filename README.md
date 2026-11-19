@@ -59,11 +59,8 @@ Essas são as contas da [carga de demonstração do backend](https://github.com/
 
 Para verificar TypeScript, lint e a inicialização do Expo, execute `node scripts/validate.cjs`.
 
-## Vídeo e distribuição
+## Vídeo
 
-| Material | Disponibilidade |
-| --- | --- |
 | Vídeo de demonstração | [Assistir no YouTube](https://youtube.com/shorts/YKgwoY1CVpQ?is=9W469k3YyKDAAUHT) |
-| APK no Firebase App Distribution | A distribuir |
 
-Com o projeto vinculado ao EAS, o perfil `preview` gera o APK com `npx eas-cli@latest build --platform android --profile preview`. Gere o APK a partir do commit de entrega e confira o hash em **Perfil → Sobre o App** antes de distribuir.
+
