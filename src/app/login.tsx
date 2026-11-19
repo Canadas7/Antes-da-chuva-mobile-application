@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { Action, CityIllustration, colors, Field, ui } from '../components/incident-ui';
@@ -16,7 +17,7 @@ export default function Login() {
     if (!email.trim() || !password) { setError('Preencha e-mail e senha.'); return; }
     setBusy(true); setError('');
     try { if (!await login(email, password)) setError('E-mail ou senha inválidos.'); }
-    catch { setError('Não foi possível salvar a sessão. Tente novamente.'); }
+    catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível entrar.'); }
     finally { setBusy(false); }
   }
 
@@ -38,6 +39,7 @@ export default function Login() {
             <Field label="Senha" placeholder="Sua senha" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" autoComplete="current-password" maxLength={100} editable={!busy} onSubmitEditing={() => { void submit(); }} />
             {error ? <Text accessibilityRole="alert" style={ui.error}>{error}</Text> : null}
             <Action title={busy ? 'Entrando…' : 'Entrar na minha conta  →'} disabled={busy} onPress={() => { void submit(); }} />
+            <Action title="Criar conta" secondary disabled={busy} onPress={() => router.push('/cadastro')} />
           </View>
 
         </View>

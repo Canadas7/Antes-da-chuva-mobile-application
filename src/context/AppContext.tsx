@@ -1,8 +1,12 @@
 import { createContext, useContext, useEffect, useRef, useState, type PropsWithChildren } from 'react';
-import { getIncidents, updateIncident, deleteIncident, manageIncident, saveIncident, saveSession, getSession, clearSession } from '../services/storage';
+import { getIncidents, updateIncident, deleteIncident, manageIncident, saveIncident } from '../services/storage';
+import { authService } from '../services/authService';
+import { configureSession } from '../services/api';
+import type { AuthSession, RegisterInput } from '../types/auth';
 import type { Incident, IncidentInput, ManagementInput, Role } from '../types/incident';
 
 type AppState = {
+  session: AuthSession | null; register: (input: RegisterInput) => Promise<void>;
   role: Role | null; updateStatus: (id: string, input: ManagementInput) => Promise<void>; signedIn: boolean; incidents: Incident[]; loading: boolean; error: string;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>; sessionLoading: boolean; reload: () => Promise<void>;
@@ -12,6 +16,7 @@ type AppState = {
 };
 const Context = createContext<AppState | null>(null);
 export function AppProvider({ children }: PropsWithChildren) {
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -34,20 +39,27 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, []);
   useEffect(() => {
     let active = true;
-    getSession().then(session => { if (active) { setSignedIn(!!session); setRole(session?.role ?? null); } })
-      .catch(() => { if (active) setSignedIn(false); })
+    authService.restore().then(value => { if (active) { setSession(value); setSignedIn(!!value); setRole(value?.user.role ?? null); } })
       .finally(() => { if (active) setSessionLoading(false); });
     return () => { active = false; };
   }, []);
-  async function login(email: string, password: string) {
-    const normalized = email.trim().toLowerCase();
-    if (!['teste@antesdachuva.com', 'gestor@antesdachuva.com'].includes(normalized) || password !== '123456') return false;
-    const nextRole: Role = normalized === 'gestor@antesdachuva.com' ? 'GESTOR' : 'CIDADAO';
-    await saveSession({ email: normalized, role: nextRole });
-    setRole(nextRole);
-    setSignedIn(true); return true;
+  function acceptSession(value: AuthSession) {
+    setSession(value); setRole(value.user.role); setSignedIn(true);
   }
-  async function logout() { await clearSession(); setSignedIn(false); setRole(null); }
+  async function login(email: string, password: string) {
+    acceptSession(await authService.login(email, password)); return true;
+  }
+  async function register(input: RegisterInput) { acceptSession(await authService.register(input)); }
+  async function logout() {
+    setSession(null); setSignedIn(false); setRole(null); setIncidents([]);
+    await authService.clear();
+  }
+  useEffect(() => {
+    configureSession(session?.accessToken ?? null, () => { void logout().catch(() => {}); });
+    if (!session) return;
+    const timer = setTimeout(() => { void logout().catch(() => {}); }, Math.max(0, session.expiresAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [session]);
   async function addIncident(input: IncidentInput) {
     if (role !== 'CIDADAO' || loading || error || saving.current) throw new Error('Cadastro indisponível.');
     saving.current = true;
@@ -81,7 +93,7 @@ export function AppProvider({ children }: PropsWithChildren) {
       setIncidents(previous => previous.filter(item => item.id !== id));
     } finally { saving.current = false; }
   }
-  return <Context.Provider value={{ editIncident, removeIncident, role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ session, register, editIncident, removeIncident, role, updateStatus, signedIn, incidents, loading, error, login, logout, sessionLoading, reload, addIncident }}>{children}</Context.Provider>;
 }
 export function useApp() {
   const context = useContext(Context);
