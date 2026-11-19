@@ -1,7 +1,6 @@
 # Antes da Chuva
 
 Aplicativo mobile da Global Solution 2026/2 da FIAP, na disciplina de Mobile Application Development.
-https://youtube.com/shorts/YKgwoY1CVpQ?is=9W469k3YyKDAAUHT
 
 O Antes da Chuva ajuda moradores a registrar problemas que podem agravar alagamentos, como bueiros entupidos e entulho nas ruas. A equipe de zeladoria acompanha os chamados e registra o andamento do atendimento.
 
@@ -38,7 +37,15 @@ O app usa React Native, Expo SDK 58, Expo Router e TypeScript. As chamadas são 
 - [Status da API](https://app-antesdachuva-561082.azurewebsites.net/actuator/health)
 - [Contrato da integração](docs/backend-contract.md)
 
-Para testar como cidadão, crie uma conta na tela de cadastro. Para testar a fila de atendimento, use a conta de demonstração `gestor@antesdachuva.com`, prevista na [carga de usuários do backend](https://github.com/gugomesx10/Antes-da-Chuva/blob/1e0b7ad19cb1763bfaed167864cb5123ef5315af/src/main/resources/db/migration/V3__seed_test_users.sql).
+### Contas de demonstração
+
+| Perfil | E-mail | Senha de teste |
+| --- | --- | --- |
+| Cidadão (Maria) | `maria@antesdachuva.com` | `Cidadao@2026` |
+| Cidadão (João) | `joao@antesdachuva.com` | `Cidadao@2026` |
+| Gestor | `gestor@antesdachuva.com` | `Gestor@2026` |
+
+Essas são as contas da [carga de demonstração do backend](https://github.com/gugomesx10/Antes-da-Chuva/blob/1e0b7ad19cb1763bfaed167864cb5123ef5315af/src/main/resources/db/migration/V3__seed_test_users.sql). Para testar com uma conta nova de cidadão, use **Criar conta** na tela de login.
 
 ## Organização do projeto
 
@@ -56,7 +63,7 @@ Para verificar TypeScript, lint e a inicialização do Expo, execute `node scrip
 
 | Material | Disponibilidade |
 | --- | --- |
-| Vídeo de demonstração no YouTube | A publicar |
+| Vídeo de demonstração | [Assistir no YouTube](https://youtube.com/shorts/YKgwoY1CVpQ?is=9W469k3YyKDAAUHT) |
 | APK no Firebase App Distribution | A distribuir |
 
 Com o projeto vinculado ao EAS, o perfil `preview` gera o APK com `npx eas-cli@latest build --platform android --profile preview`. Gere o APK a partir do commit de entrega e confira o hash em **Perfil → Sobre o App** antes de distribuir.
