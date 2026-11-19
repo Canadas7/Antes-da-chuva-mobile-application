@@ -14,9 +14,9 @@ export const authService = {
   register: async (input: RegisterInput) => persist(await api<AuthResponse>('/auth/register', 'POST', { ...input, name: input.name.trim(), email: input.email.trim().toLowerCase(), neighborhood: input.neighborhood.trim() })),
   me: () => api<User>('/auth/me'),
   async restore(): Promise<AuthSession | null> {
-    const raw = await AsyncStorage.getItem(KEY);
-    if (!raw) return null;
     try {
+      const raw = await AsyncStorage.getItem(KEY);
+      if (!raw) return null;
       const session: AuthSession = JSON.parse(raw);
       if (!session.accessToken || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
         await authService.clear(); return null;

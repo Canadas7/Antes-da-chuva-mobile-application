@@ -55,7 +55,8 @@ export default function Manager() {
   const term = normalizeSearch(search.trim());
   const filtered = incidents.filter(item => {
     const resolved = item.status === 'RESOLVIDA';
-    if (filter !== 'Todos' && resolved !== (filter === 'Resolvidos')) return false;
+    if (filter === 'Resolvidos' && !resolved) return false;
+    if (filter === 'Pendentes' && !['ABERTA', 'EM_ANALISE', 'EM_ANDAMENTO'].includes(item.status)) return false;
     return normalizeSearch(`${item.title} ${item.neighborhood} ${item.address} ${item.category} ${item.id}`).includes(term);
   }).sort(compareIncidents);
 

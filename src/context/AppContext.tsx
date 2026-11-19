@@ -53,6 +53,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let active = true;
     authService.restore().then(value => { if (active) { setSession(value); setSignedIn(!!value); setRole(value?.user.role ?? null); } })
+      .catch(() => { if (active) { setSession(null); setSignedIn(false); setRole(null); } })
       .finally(() => { if (active) setSessionLoading(false); });
     return () => { active = false; };
   }, []);

@@ -6,7 +6,6 @@ export interface ManagementInput { status: IncidentStatus; priority?: IncidentPr
 export const statuses = ['ABERTA', 'EM_ANALISE', 'EM_ANDAMENTO', 'RESOLVIDA', 'REJEITADA', 'CANCELADA'] as const;
 export type IncidentStatus = typeof statuses[number];
 export const statusLabels: Record<IncidentStatus, string> = { REJEITADA: 'Rejeitada', CANCELADA: 'Cancelada', ABERTA: 'Aberta', EM_ANALISE: 'Em análise', EM_ANDAMENTO: 'Em andamento', RESOLVIDA: 'Resolvida' };
-export const categories = ['Alagamento', 'Bueiro obstruído', 'Entulho', 'Córrego com problema', 'Deslizamento', 'Outro'] as const;
 export interface Incident {
   id: string;
   title: string;
@@ -23,4 +22,3 @@ export interface Incident {
 }
 export type IncidentInput = Pick<Incident, 'title' | 'description' | 'category' | 'address' | 'neighborhood' | 'categoryId' | 'latitude' | 'longitude'>;
 export type Role = 'CIDADAO' | 'GESTOR';
-export interface Session { email: string; role: Role }

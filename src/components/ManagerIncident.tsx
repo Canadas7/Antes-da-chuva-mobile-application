@@ -2,11 +2,11 @@ import { useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useApp } from '../context/AppContext';
-import { statuses, statusLabels, type Incident } from '../types/incident';
+import { statuses, statusLabels, type Incident, type IncidentStatus } from '../types/incident';
 import { IncidentHistory } from './IncidentHistory';
 import { Action, Choices, colors, Field, Page, ui } from './incident-ui';
 
-const statusOptions = statuses.map(status => statusLabels[status]);
+const transitions: Partial<Record<IncidentStatus, IncidentStatus[]>> = { ABERTA: ['EM_ANALISE', 'REJEITADA'], EM_ANALISE: ['EM_ANDAMENTO', 'REJEITADA'], EM_ANDAMENTO: ['RESOLVIDA', 'REJEITADA'] };
 
 export function ManagerIncident({ item }: { item: Incident }) {
   const { updateStatus } = useApp();
@@ -52,7 +52,7 @@ export function ManagerIncident({ item }: { item: Incident }) {
         <Text accessibilityRole="header" style={styles.sectionTitle}>Atendimento</Text>
         <Choices
           label="Status"
-          values={statusOptions.filter(label => !['Aberta', 'Cancelada'].includes(label))}
+          values={[item.status, ...(transitions[item.status] ?? [])].map(value => statusLabels[value])}
           value={statusLabels[status]}
           disabled={busy}
           onChange={label => {
