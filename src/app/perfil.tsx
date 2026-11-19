@@ -19,6 +19,7 @@ export default function Profile() {
       <Text style={ui.label}>Bairro</Text><Text style={ui.subtitle}>{session?.user.neighborhood || 'Não informado'}</Text></View>
     {error ? <Text style={ui.error}>{error}</Text> : null}
     <Action title={busy ? 'Saindo…' : 'Sair da conta'} disabled={busy} onPress={() => { void leave(); }} />
+    <Action title="Sobre o App" secondary onPress={() => router.push('/sobre')} />
     <Action title="Voltar às ocorrências" secondary onPress={() => router.replace('/')} />
   </Page>;
 }
