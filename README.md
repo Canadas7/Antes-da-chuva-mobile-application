@@ -26,7 +26,7 @@ npm start
 
 Escaneie o QR code com o Expo Go ou pressione `a` no terminal para abrir no emulador Android. O `.env.example` já aponta para a API hospedada no Azure. Para usar outra instância, ajuste `EXPO_PUBLIC_API_URL` no `.env` e reinicie o Expo.
 
-Para rodar no navegador, use `npx expo start --web --port 8099`. O login e as demais chamadas pela web dependem de `http://localhost:8099` estar na lista de origens permitidas no Azure App Service. O teste em Android pode ser feito pelo Expo Go ou pelo APK.
+Para rodar no navegador, use `npx expo start --web --port 8099`. O login e as demais chamadas pela web dependem de `http://localhost:8099` estar na lista de origens permitidas no Azure App Service.
 
 ## Backend e contas de teste
 
